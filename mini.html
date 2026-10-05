@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/Build/Cesium/Widgets/widgets.css" />
+  <script src="/Build/Cesium/Cesium.js"></script>
+  <style>html,body,#map{width:100%;height:100%;margin:0;padding:0;}</style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkFHckoyOEpraTN4aTVMcFMiLCJqdGkiOiJkYWU1MDdiYi1iYmI3LTQ5MmMtYTU0Yy01YWRhOGVlYmI0NzMiLCJpZCI6NDgwNTIxLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODg1MDgzNjV9.BaCGDJ_zeWgX8rqRRs8iuLHACerSzO3lqFCBC4UVHgw";
+    const viewer = new Cesium.Viewer("map");
+
+    const A = Cesium.Cartesian3.fromDegrees(114.35231, 30.53543, 1000);
+    const B = Cesium.Cartesian3.fromDegrees(114.40783, 30.51012, 100);
+
+    // ① 位置表：只有两行
+    const start = Cesium.JulianDate.now();
+    const stop  = Cesium.JulianDate.addSeconds(start, 30, new Cesium.JulianDate());
+    const position = new Cesium.SampledPositionProperty();
+    position.addSample(start, A);
+    position.addSample(stop,  B);
+
+    // ② 时间轴：告诉它 起点/终点/现在/开始走
+    viewer.clock.startTime = start.clone();
+    viewer.clock.stopTime  = stop.clone();
+    viewer.clock.currentTime = start.clone();
+    viewer.clock.shouldAnimate = true;
+
+    // ③ 实体：给它加个红点，方便肉眼看见
+    const entity = viewer.entities.add({
+      availability: new Cesium.TimeIntervalCollection([
+        new Cesium.TimeInterval({ start: start, stop: stop })
+      ]),
+      position: position,
+      point: { pixelSize: 12, color: Cesium.Color.RED }
+    });
+
+    // ④ 每帧：查表 → 摆相机 → 打印
+    viewer.scene.preUpdate.addEventListener(function () {
+      const now = viewer.clock.currentTime;
+      const pos = entity.position.getValue(now);
+      console.log("过了", Cesium.JulianDate.secondsDifference(now, start).toFixed(2),
+                  "秒，查到位置了吗？", pos ? "有" : "没有（超出表格范围）");
+      if (pos) {
+        viewer.camera.lookAt(pos, { heading: 0, pitch: Cesium.Math.toRadians(-45), range: 3000 });
+      }
+    });
+  </script>
+</body>
+</html>

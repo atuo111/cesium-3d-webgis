@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <title>我的第一个 Cesium 页面</title>
+  <!-- ① 引入控件的样式 -->
+  <link href="/Build/Cesium/Widgets/widgets.css" rel="stylesheet" />
+  <style>
+    html,
+    body,
+    #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ② 放一个装满整个屏幕的容器 -->
+  <div id="map"></div>
+
+  <!-- ③ 引入 Cesium 本体 -->
+  <script src="/Build/Cesium/Cesium.js"></script>
+  <script>
+    // ① 把你的密钥填进去（字符串，带引号）
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkFHckoyOEpraTN4aTVMcFMiLCJqdGkiOiJkYWU1MDdiYi1iYmI3LTQ5MmMtYTU0Yy01YWRhOGVlYmI0NzMiLCJpZCI6NDgwNTIxLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODg1MDgzNjV9.BaCGDJ_zeWgX8rqRRs8iuLHACerSzO3lqFCBC4UVHgw";
+
+    // ② 创建 viewer，不指定底图 = 默认用 ion 的 Bing 卫星影像（就是官方例子的效果）
+    const viewer = new Cesium.Viewer("map", {
+      baseLayerPicker: true,   // 保留右上角图层切换按钮
+    });
+
+    // 摆之前先清空旧的东西，方便反复试验（很好用的"一键清空"）
+    viewer.entities.removeAll();
+
+    // ① 一个点 + 名字（天安门）
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(116.391, 39.907, 0),
+      point: { pixelSize: 10, color: Cesium.Color.RED },
+      label: {
+        text: "天安门", font: "16px sans-serif",
+        pixelOffset: new Cesium.Cartesian2(0, -20)
+      },
+    });
+
+    /*var tiananmen =Cesium.Cartesian3.fromDegrees(116.391, 39.907, 0);
+    console.log(tiananmen.x, tiananmen.y, tiananmen.z 
+    )
+     var ellipsoid = viewer.scene.globe.ellipsoid;
+            var 弧度坐标 = ellipsoid.cartesianToCartographic(tiananmen);
+            var lat = Cesium.Math.toDegrees(弧度坐标.latitude);
+            var lng = Cesium.Math.toDegrees(弧度坐标.longitude);
+            var height = 弧度坐标.height;
+            console.log("转回来的经纬度和高度:", lng, lat, height);
+    */
+    var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+    handler.setInputAction(function (movement) {
+
+      var position = viewer.camera.pickEllipsoid(movement.position, viewer.scene.globe.ellipsoid);
+
+      if (!Cesium.defined(position)) {
+        console.log("鼠标点击位置不在地球椭球体上");
+        return;
+      }
+
+      console.log("鼠标点击位置的场景坐标:", position);
+
+      viewer.entities.add({
+        position: position,
+        point: { pixelSize: 10, color: Cesium.Color.RED },
+        label: {
+          text: "鼠标点击位置", font: "16px sans-serif",
+          pixelOffset: new Cesium.Cartesian2(0, -20)
+        },
+      });
+      var ellipsoid = viewer.scene.globe.ellipsoid;
+      var 弧度坐标 = ellipsoid.cartesianToCartographic(position);
+      var lat = Cesium.Math.toDegrees(弧度坐标.latitude);
+      var lng = Cesium.Math.toDegrees(弧度坐标.longitude);
+      var height = 弧度坐标.height;
+      console.log("转回来的经纬度和高度:", lng, lat, height);
+
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+
+
+    // ② 一条线（天安门 → 故宫 → 北海公园，把位置连起来）
+    viewer.entities.add({
+      polyline: {
+        positions: Cesium.Cartesian3.fromDegreesArray([
+          116.391, 39.907,     // 天安门
+          116.397, 39.916,     // 故宫
+          116.385, 39.925,     // 北海公园
+        ]),
+        width: 4,
+        material: Cesium.Color.YELLOW,
+      },
+    });
+
+    // ③ 一个椭圆（以天安门为中心，横5公里、竖3公里的范围）
+    viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(116.391, 39.907, 0),
+      ellipse: {
+        semiMajorAxis: 5000,     // 半长轴（米）——半径不是直径！
+        semiMinorAxis: 3000,     // 半短轴（米）
+        material: Cesium.Color.RED.withAlpha(0.3),  // 半透明红
+      },
+
+      //可动的椭圆
+      /*ellipse: {
+      // 告诉 Cesium：半径不是固定值，而是"每画一帧，现算一次"
+      semiMajorAxis: new Cesium.CallbackProperty(function () {
+        // 用电脑当前时间算半径：在 1000 米 ~ 5000 米之间来回变化
+        return 3000 + 2000 * Math.sin(performance.now() / 1000);
+      }, false),
+      semiMinorAxis: new Cesium.CallbackProperty(function () {
+        return 1800 + 1200 * Math.sin(performance.now() / 1000);
+      }, false),
+      material: Cesium.Color.RED.withAlpha(0.3),
+    }*/
+
+    });
+
+    // ④ 一块贴地的多边形（圈出故宫的大致范围）
+    viewer.entities.add({
+      polygon: {
+        hierarchy: Cesium.Cartesian3.fromDegreesArray([
+          116.390, 39.912,
+          116.396, 39.912,
+          116.396, 39.922,
+          116.390, 39.922,
+        ]),
+        material: Cesium.Color.BLUE.withAlpha(0.3),
+      },
+    });
+
+    //绕圈转
+    // ① 用一个"会变的变量"记录当前转到哪个角度了（从 0° 开始）
+
+    let rangeHeight = 8000;
+
+    // ② postUpdate = "每刷新一帧画面，都自动叫我一次"
+    /*viewer.scene.postUpdate.addEventListener(function () {
+     
+      rangeHeight += 20;
+      viewer.camera.lookAt(
+        Cesium.Cartesian3.fromDegrees(116.391, 39.907, 100),
+        new Cesium.HeadingPitchRange(
+         Cesium.Math.toRadians(45),               // 航向：用"会变的变量"替代"写死的 45"
+          Cesium.Math.toRadians(-45),  // 俯仰：一直低头 45°
+          rangeHeight                       // 距离：一直保持 8000 米
+        )
+      );
+    });*/
+
+    //固定视角
+    // ① 先确定"盯住哪个点"：天安门地面往上 100 米处
+    /*const target = Cesium.Cartesian3.fromDegrees(116.391, 39.907, 100);
+    
+    // ② 让眼睛盯住它，用 HeadingPitchRange 指定"看法"
+    viewer.camera.lookAt(target, new Cesium.HeadingPitchRange(
+      Cesium.Math.toRadians(90),     // heading 航向：脸朝 45° 方向
+      Cesium.Math.toRadians(-45),    // pitch 俯仰：低头 45° 看地面
+      8000                           // range 距离：眼睛离目标 8000 米
+    ));*/
+
+    // ⑤ 飞到天安门上空
+
+    viewer.camera.setView({//没有动画直接到位
+      destination: Cesium.Cartesian3.fromDegrees(116.391, 39.907, 5000),
+      orientation: {
+        heading: Cesium.Math.toRadians(27.7), // east, default value is 0.0 (north)
+        pitch: Cesium.Math.toRadians(-90),    // default value (looking down)
+        roll: 0.0                             // default value
+      }
+    });
+    //飞到上海上空
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(121.4997, 31.2397, 5000),
+      duration: 3,
+
+      complete: () => {
+        viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(116.391, 39.907,
+            5000),
+          duration: 5,
+          easingFunction: Cesium.EasingFunction.LINEAR_NONE,
+          orientation: {
+            heading: Cesium.Math.toRadians(
+              346.4), // east, default value is 0.0 (north)
+            pitch: Cesium.Math.toRadians(
+              -79.6),    // default value (looking down)
+            roll: 0.0                             // default value
+          },
+
+        });
+      }
+    });
+    
+
+
+
+    // 钉一个红点，标出天安门的位置（就算底图糊，这个点和字也一定看得见）
+    /*viewer.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(116.391, 39.907),
+      point: {
+        pixelSize: 12,                            // 红点大小
+        color: Cesium.Color.RED,                  // 红色
+        outlineColor: Cesium.Color.WHITE,         // 白边，更显眼
+        outlineWidth: 3,
+      },
+      label: {
+        text: "天安门",                    // 显示的文字
+        font: "18px sans-serif",
+        fillColor: Cesium.Color.WHITE,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 3,                          // 黑边白字，任何背景下都看得清
+        pixelOffset: new Cesium.Cartesian2(0, -30), // 让文字显示在红点上方
+      },
+    });*/
+
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="/Build/Cesium/Widgets/widgets.css" />
+  <script src="/Build/Cesium/Cesium.js"></script>
+  <script src="./Roaming.js"></script>
+  <style>
+    html,
+    body,
+    #map {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <div style="position:absolute; left:10px; top:10px; z-index:10000">
+    <button onclick="startRoam()">开始漫游</button>
+    <button onclick="pauseRoam()">暂停</button>
+    <button onclick="resumeRoam()">继续</button>
+    <button onclick="stopRoam()">取消</button>
+  </div>
+  <script>
+    Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkFHckoyOEpraTN4aTVMcFMiLCJqdGkiOiJkYWU1MDdiYi1iYmI3LTQ5MmMtYTU0Yy01YWRhOGVlYmI0NzMiLCJpZCI6NDgwNTIxLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODg1MDgzNjV9.BaCGDJ_zeWgX8rqRRs8iuLHACerSzO3lqFCBC4UVHgw";
+
+    (async function () {          // ← 必须包一层！原因见下面
+      const viewer = new Cesium.Viewer("map");
+      viewer.scene.setTerrain(Cesium.Terrain.fromWorldTerrain());
+
+      // 加载整个校园模型：只给"总入口"这一个地址
+      const tileset = await Cesium.Cesium3DTileset.fromUrl("/demo/tileset.json");
+      viewer.scene.primitives.add(tileset);
+      const roaming = new Roaming(viewer, { time: 60 });
+      window.roaming = roaming;
+      window.viewer = viewer;//方便在浏览器控制台里调试
+      window.tileset = tileset;
+      //调位置矩阵
+      function moveTileset(tileset, up) {
+        const c = Cesium.Cartographic.fromCartesian(tileset.boundingSphere.center);
+        const surface = Cesium.Cartesian3.fromRadians(c.longitude, c.latitude, 0);    // 同一经纬度的椭球面点
+        const target = Cesium.Cartesian3.fromRadians(c.longitude, c.latitude, up);   // 同一经纬度、抬高 up 米
+        const t = Cesium.Cartesian3.subtract(target, surface, new Cesium.Cartesian3());
+        tileset.modelMatrix = Cesium.Matrix4.fromTranslation(t);
+      }
+      window.moveTileset = moveTileset;   // 让控制台也能调用它
+      // 相机飞到模型上方
+      await viewer.zoomTo(tileset);
+      moveTileset(tileset, -30);
+
+      // 想更清晰（也更吃性能）就取消注释：
+      // tileset.maximumScreenSpaceError = 8;
+    })().catch(e => alert("出错了：" + e.message));
+
+    function startRoam() {
+      window.roaming.cameraRoaming([
+        Cesium.Cartesian3.fromDegrees(112.4730, 32.9774, 180),   // 校园西侧
+        Cesium.Cartesian3.fromDegrees(112.4910, 32.9774, 180)    // 校园东侧
+      ]);
+    }
+    function pauseRoam() { window.roaming.PauseOrContinue(false); }
+    function resumeRoam() { window.roaming.PauseOrContinue(true); }
+    function stopRoam() { window.roaming.EndRoaming(); }
+  </script>
+</body>
+
+</html>
