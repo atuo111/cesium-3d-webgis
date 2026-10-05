@@ -1,0 +1,59 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "教学楼A",
+        "description": "我上课的地方"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.3095, 39.9900]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "图书馆",
+        "description": "期末复习的地方",
+        "marker-color": "#ff0000"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [116.3108, 39.9895]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "主干道",
+        "description": "从校门到图书馆的路"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [116.3080, 39.9885],
+          [116.3095, 39.9900],
+          [116.3108, 39.9895]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "操场"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [116.3100, 39.9910],
+          [116.3118, 39.9910],
+          [116.3118, 39.9902],
+          [116.3100, 39.9902],
+          [116.3100, 39.9910]
+        ]]
+      }
+    }
+  ]
+}
