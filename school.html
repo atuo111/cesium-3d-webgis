@@ -53,6 +53,28 @@
       await viewer.zoomTo(tileset);
       moveTileset(tileset, -30);
 
+            // 点击拾取：取空间信息
+      const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+      handler.setInputAction(function (movement) {
+        // 第一层：拾取到了什么东西
+        const picked = viewer.scene.pick(movement.position);
+        if (!Cesium.defined(picked)) { console.log("点到天空了"); return; }
+
+        // 第二层：拿到精确的三维坐标（需要浏览器支持深度纹理，绝大多数都支持）
+        const cartesian = viewer.scene.pickPosition(movement.position);
+        if (!Cesium.defined(cartesian)) return;
+
+        const carto = Cesium.Cartographic.fromCartesian(cartesian);
+        console.log("经度:", Cesium.Math.toDegrees(carto.longitude).toFixed(6),
+                    "纬度:", Cesium.Math.toDegrees(carto.latitude).toFixed(6),
+                    "椭球高:", carto.height.toFixed(2));
+
+        // 如果点到的是倾斜模型，还能拿到"要素"
+        if (picked instanceof Cesium.Cesium3DTileFeature) {
+          console.log("要素名:", picked.getProperty("name"));
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
       // 想更清晰（也更吃性能）就取消注释：
       // tileset.maximumScreenSpaceError = 8;
     })().catch(e => alert("出错了：" + e.message));
