@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="/Build/Cesium/Widgets/widgets.css" />
   <script src="/Build/Cesium/Cesium.js"></script>
   <script src="./Roaming.js"></script>
+  <script src="./Measure.js"></script>
   <style>
     html,
     body,
@@ -25,6 +26,9 @@
     <button onclick="pauseRoam()">暂停</button>
     <button onclick="resumeRoam()">继续</button>
     <button onclick="stopRoam()">取消</button>
+    <button onclick="window.measure && measure.startLine()">距离量测</button>
+    <button onclick="window.measure && measure.startPolygon()">面积量测</button>
+    <button onclick="window.measure && measure.clear()">清除</button>
   </div>
   <script>
     Cesium.Ion.defaultAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJub25jZSI6IkFHckoyOEpraTN4aTVMcFMiLCJqdGkiOiJkYWU1MDdiYi1iYmI3LTQ5MmMtYTU0Yy01YWRhOGVlYmI0NzMiLCJpZCI6NDgwNTIxLCJpc3MiOiJodHRwczovL2FwaS5jZXNpdW0uY29tIiwiYXVkIjoidW5kZWZpbmVkX2RlZmF1bHQiLCJpYXQiOjE3ODg1MDgzNjV9.BaCGDJ_zeWgX8rqRRs8iuLHACerSzO3lqFCBC4UVHgw";
@@ -52,6 +56,7 @@
       // 相机飞到模型上方
       await viewer.zoomTo(tileset);
       moveTileset(tileset, -30);
+       window.measure = new MeasureTool(viewer);
 
             // 点击拾取：取空间信息
       const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
