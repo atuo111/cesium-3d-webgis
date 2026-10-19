@@ -1,6 +1,6 @@
 # cesium-3d-webgis
 
-学习 Cesium 三维 WebGIS 的练习仓库。2026 年 9 月中旬开始，从零学习
+学习 Cesium 三维 WebGIS 的练习仓库
 JavaScript 基础与 Cesium 三维可视化，记录每一步的练习代码。
 
 技术栈：Cesium 1.145 · JavaScript · 3D Tiles · 倾斜摄影模型
